@@ -24,7 +24,7 @@ export class Database<T> {
 
     for await (const line of lines) {
       const { key, value } = JSON.parse(line);
-      this.memory.set(key, value);
+      if (value !== undefined) this.memory.set(key, value);
     }
   }
 
@@ -42,7 +42,7 @@ export class Database<T> {
   /** Inserts a record (auto-upserts) */
   set(key: string, value: T) {
     this.memory.set(key, value);
-    Deno.writeTextFileSync(this.path, `${JSON.stringify({ key, value })}\n`, {
+    Deno.writeTextFileSync(this.path, `\n${JSON.stringify({ key, value })}`, {
       append: true,
     });
   }
