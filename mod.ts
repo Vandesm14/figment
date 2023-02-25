@@ -24,8 +24,8 @@ await new Command()
   .default('help')
   .command('help', new HelpCommand().global())
 
-  .command('add')
-  .alias('a')
+  .command('new')
+  .alias('n')
   .description('Add a new figment')
   .action(() => {
     const topic = prompt('Topic:');
@@ -35,7 +35,36 @@ await new Command()
       Deno.exit(1);
     }
 
-    const entry = prompt('Entry:') ?? '';
+    db.set(topic, { entries: [] });
+  })
+
+  .command('add')
+  .alias('a')
+  .description('Add a figment')
+  .arguments('[topic:string]')
+  .action(async (_, _topic) => {
+    const topic =
+      _topic ??
+      (await Input.prompt({
+        message: 'Topic:',
+        list: true,
+        suggestions: db.list(),
+      }));
+
+    if (!topic) {
+      console.error('Topic is required');
+      Deno.exit(1);
+    }
+
+    const entry = await Input.prompt({
+      message: 'Entry:',
+    });
+
+    if (!entry) {
+      console.error('Entry is required');
+      Deno.exit(1);
+    }
+
     const newEntry: Entry = { text: entry, ts: Date.now() };
 
     const existing = db.get(topic);
@@ -50,21 +79,21 @@ await new Command()
   .alias('g')
   .description('Get a figment')
   .arguments('[topic:string]')
-  .action(async (_, topic) => {
-    let key: string | undefined = topic;
-    if (!key)
-      key = await Input.prompt({
+  .action(async (_, _topic) => {
+    const topic: string | undefined =
+      _topic ??
+      (await Input.prompt({
         message: 'Topic:',
         list: true,
         suggestions: db.list(),
-      });
+      }));
 
-    if (!key) {
+    if (!topic) {
       console.error('Topic is required');
       Deno.exit(1);
     }
 
-    const collection = db.get(key);
+    const collection = db.get(topic);
 
     if (!collection) {
       console.error('Topic not found');
