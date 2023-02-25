@@ -3,7 +3,15 @@ import {
   Command,
   HelpCommand,
 } from 'https://deno.land/x/cliffy@v0.25.7/command/mod.ts';
-import { Input } from 'https://deno.land/x/cliffy@v0.25.7/prompt/mod.ts';
+import {
+  Figures,
+  Input,
+  InputOptions,
+} from 'https://deno.land/x/cliffy@v0.25.7/prompt/mod.ts';
+import {
+  brightBlue,
+  yellow,
+} from 'https://deno.land/std@0.170.0/fmt/colors.ts';
 
 interface Collection {
   entries: Entry[];
@@ -12,6 +20,29 @@ interface Collection {
 interface Entry {
   text: string;
   ts: number;
+}
+
+class InputDefault extends Input {
+  /** Execute the prompt and show cursor on end. */
+  public static prompt(options: string | InputOptions): Promise<string> {
+    if (typeof options === 'string') {
+      options = { message: options };
+    }
+
+    const prompt = new this({
+      pointer: brightBlue(Figures.POINTER_SMALL),
+      prefix: yellow('? '),
+      indent: ' ',
+      listPointer: brightBlue(Figures.POINTER),
+      maxRows: 8,
+      minLength: 0,
+      maxLength: Infinity,
+      ...options,
+    });
+    prompt.inputValue = options.default ?? prompt.inputValue;
+    prompt.inputIndex = prompt.inputValue.length;
+    return prompt.prompt();
+  }
 }
 
 const db = new Database<Collection>('db.json');
@@ -153,10 +184,9 @@ await new Command()
     const { collection, topic } = await promptTopic(_topic);
     const index = await promptEntryIndex(collection, _index);
 
-    const newText = await Input.prompt({
+    const newText = await InputDefault.prompt({
       message: 'Entry:',
-      list: true,
-      suggestions: [collection.entries[index! - 1].text],
+      default: collection.entries[index! - 1].text,
     });
 
     let entries = collection.entries;
