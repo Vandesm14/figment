@@ -142,7 +142,7 @@ await new Command()
   .description('List all figments')
   .action(() => {
     const topics = db.list();
-    console.log(topics);
+    console.log(topics.join('\n'));
   })
 
   .command('edit')
