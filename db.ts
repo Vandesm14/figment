@@ -73,4 +73,9 @@ export class Database<T> {
     const entries = [...this.memory.entries()];
     return entries.filter(([_, value]) => fn(value)).map(([_, value]) => value);
   }
+
+  /** Maps through all values */
+  map<U>(fn: (val: T) => U): U[] {
+    return [...this.memory.values()].map(fn);
+  }
 }
